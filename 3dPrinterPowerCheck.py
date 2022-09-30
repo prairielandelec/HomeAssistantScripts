@@ -62,28 +62,28 @@ def main():
 
         # if we succeed and get a "200 success" code proceed
         if response.status_code != 200:
+
             # if we cant connect to the API for some reason, keep trying as long as the user clicks "yes"
-            if not messagebox.askyesno('Connection Error!', 'Error Code: ' + str(response.status_code) + '\n\nWould You Like To Retry?'):
+            if not messagebox.askyesno('Connection Error!', f'Error Code: {response.status_code}\n\nWould You Like To Retry?'):
                 break
 
-        # push the contents of the JSON response into a python dictionary
+        # find the dictionary key "state" in the json response
         responsedict = response.json()
-
-        # find the dictionary key "state" and set it to powerstatus
         powerstatus = responsedict["state"]
 
         if powerstatus == "on":
             # if the state is "on" then let us know and move on. May need to change depending on device in HA
-            messagebox.showinfo('Connection Success!', 'Connected To API Successfully and Power is ' + powerstatus.upper() + '!')
+            messagebox.showinfo('Connection Success!', f'Connected To API Successfully and Power is {powerstatus.upper()}!')
             break
 
         elif powerstatus == "off":
             # if the state is "off" then ask if we want to turn it on
-            if not messagebox.askyesno('Printer Power Is ' + powerstatus.upper() + '!','\n\nWould You Like To Power On?'):
+            if not messagebox.askyesno(f'Printer Power Is {powerstatus.upper()}!', '\n\nWould You Like To Power On?'):
                 break
 
             # if we do want to turn it on, then send the POST message to the API
             postResponse = post(toggleUrl, headers=headers, json=data)
+            # ToDo: either remove this response variable or use it
 
         # wait half a second before hopping back in the loop to give the API a chance to update the state
         time.sleep(0.5)

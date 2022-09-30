@@ -76,21 +76,17 @@ def main():
 
             elif powerstatus == "off":
                 # if the state is "off" then ask if we want to turn it on
-                TogglePower = messagebox.askyesno('Printer Power Is ' + powerstatus.upper() + '!','\n\nWould You Like To Power On?')
-
-                if TogglePower == True:
-                    # if we do want to turn it on, then send the POST message to the API
-                    postResponse = post(toggleUrl, headers=headers, json=data)
-
-                    # wait half a second before hopping back in the loop to give the API a chance to update the state
-                    time.sleep(0.5)
-                else:
+                if not messagebox.askyesno('Printer Power Is ' + powerstatus.upper() + '!','\n\nWould You Like To Power On?'):
                     break
+                # if we do want to turn it on, then send the POST message to the API
+                postResponse = post(toggleUrl, headers=headers, json=data)
 
-        else:
-            res = messagebox.askyesno('Connection Error!', 'Error Code: ' + str(response.status_code) + '\n\nWould You Like To Retry?')  # if we cant connect to the API for some reason, keep trying as long as the user clicks "yes"
-            if res == False:
-                break
+                # wait half a second before hopping back in the loop to give the API a chance to update the state
+                time.sleep(0.5)
+
+        # if we cant connect to the API for some reason, keep trying as long as the user clicks "yes"
+        if not messagebox.askyesno('Connection Error!', 'Error Code: ' + str(response.status_code) + '\n\nWould You Like To Retry?'):
+            break
 
 
 if __name__ == "__main__":

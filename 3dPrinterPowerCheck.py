@@ -12,13 +12,15 @@ This script requires that you have:
    https://developers.home-assistant.io/docs/api/rest/
 """
 
-import requests
-from requests import post
-from tkinter import messagebox
-import tkinter as tk
 import time
-root = tk.Tk()
-root.withdraw()
+import requests
+from tkinter import Tk
+from tkinter import messagebox
+
+
+RELAY_NAME = "YOURRELAYNAME"
+HOME_ASST_URL = "http://your.homeassitant.url.here:8123"
+TOKEN = "TOKEN"  # ToDo: read this from environment variable
 
 """
 This is the URL that we are going to GET the status information about the relay from
@@ -27,19 +29,19 @@ This is the same port as your frontend which is likely :8123
 This is followed by "/api/states/my.entity" so a complete URL would be:
     "http://192.168.0.1:8123/api/states/switch.powerplug"
 """
-statusUrl = "http://your.homeassitant.url.here:8123/api/states/switch.YOURRELAYNAME"
+STATUS_URL = f"{HOME_ASST_URL}/api/states/switch.{RELAY_NAME}"
 
 """
 This follows the same formula as above, but is for POST messages to turn on the relay that you are trying to control. 
 This could require some additional configuration (your relay may be configured in HA as a light for example)
 """
-toggleUrl = "http://your.homeassitant.url.here:8123/api/services/switch/turn_on"
+TOGGLE_URL = f"{HOME_ASST_URL}/api/services/switch/turn_on"
 
 """
 This is the payload that is going to be pushed in the POST message, you will 
 need to make sure that the entity id matches your entity
 """
-data = {"entity_id": "switch.YOURRELAYNAME"}
+DATA = {"entity_id": f"switch.{RELAY_NAME}"}
 
 """
 This is the header that is sent to the API along with your GET and POST messages for authentication
@@ -47,20 +49,23 @@ You will need to go to your user profile in the Home Assistant Frontend and crea
 Long-Lived Access Token and paste it below in quotes after the "Authorization":
 Content-Type can remain the same
 """
-headers = {
-    "Authorization": "Bearer YOURTOKENHERE",
+HEADERS = {
+    "Authorization": f"Bearer {TOKEN}",
     "content-type": "application/json",
-    }
+}
 
 
 def main():
+    root = Tk()
+    root.withdraw()
+
     # This will run as long as a break is not hit so if a retry is requested it will hop back to the top of the loop
     while True:
 
-        # get the status of the switch and save the response as "response"
-        response = requests.request("GET", statusUrl, headers=headers)
+        # get the status of the switch
+        response = requests.get(STATUS_URL, headers=HEADERS)
 
-        # if we succeed and get a "200 success" code proceed
+        # handle unsuccessful request response
         if response.status_code != 200:
 
             # if we cant connect to the API for some reason, keep trying as long as the user clicks "yes"
@@ -82,8 +87,12 @@ def main():
                 break
 
             # if we do want to turn it on, then send the POST message to the API
-            postResponse = post(toggleUrl, headers=headers, json=data)
+            response = requests.post(TOGGLE_URL, headers=HEADERS, json=DATA)
             # ToDo: either remove this response variable or use it
+
+        else:
+            # ToDo: add logging and handle cases where powerstatus does not match expected values
+            pass
 
         # wait half a second before hopping back in the loop to give the API a chance to update the state
         time.sleep(0.5)

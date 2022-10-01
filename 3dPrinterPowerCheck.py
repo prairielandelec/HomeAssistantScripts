@@ -72,30 +72,29 @@ def main():
             if not messagebox.askyesno('Connection Error!', f'Error Code: {response.status_code}\n\nWould You Like To Retry?'):
                 break
 
+            # wait half a second before hopping back in the loop to give the API a chance to update the state
+            time.sleep(0.5)
+            continue
+
         # find the dictionary key "state" in the json response
         responsedict = response.json()
         powerstatus = responsedict["state"]
 
         if powerstatus == "on":
             # if the state is "on" then let us know and move on. May need to change depending on device in HA
-            messagebox.showinfo('Connection Success!', f'Connected To API Successfully and Power is {powerstatus.upper()}!')
+            messagebox.showinfo('Connection Success!', f'Power state: {powerstatus.upper()}')
             break
 
         elif powerstatus == "off":
             # if the state is "off" then ask if we want to turn it on
-            if not messagebox.askyesno(f'Printer Power Is {powerstatus.upper()}!', '\n\nWould You Like To Power On?'):
-                break
-
-            # if we do want to turn it on, then send the POST message to the API
-            response = requests.post(TOGGLE_URL, headers=HEADERS, json=DATA)
-            # ToDo: either remove this response variable or use it
+            if messagebox.askyesno('Toggle Power State?', f'Power state: {powerstatus.upper()}\n\nWould You Like To Power On?'):
+                # if we do want to turn it on, then send the POST message to the API
+                requests.post(TOGGLE_URL, headers=HEADERS, json=DATA)
+            break
 
         else:
             # ToDo: add logging and handle cases where powerstatus does not match expected values
-            pass
-
-        # wait half a second before hopping back in the loop to give the API a chance to update the state
-        time.sleep(0.5)
+            messagebox.showwarning('Unexpected power state!', f'Power state: {powerstatus.upper()}')
 
 
 if __name__ == "__main__":
